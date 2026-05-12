@@ -29,7 +29,7 @@ permissions:
   contents: write
 
 env:
-  JAVA_VERSION: '22'
+  JAVA_VERSION: '25'
 
 jobs:
   build:
