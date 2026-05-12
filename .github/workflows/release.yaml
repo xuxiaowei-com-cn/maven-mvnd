@@ -106,6 +106,18 @@ jobs:
       - name: 'Build native distribution'
         run: ./mvnw verify -Pnative -Dmrm=false -B -ntp -e -DskipTests -s .mvn/release-settings.xml
 
+      - name: 'Generate SHA-256 checksums'
+        shell: bash
+        run: |
+          cd dist/target
+          for f in maven-mvnd-*.zip maven-mvnd-*.tar.gz; do
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "$f" > "$f.sha256"
+            elif command -v shasum >/dev/null 2>&1; then
+              shasum -a 256 "$f" > "$f.sha256"
+            fi
+          done
+
       - name: 'Verify native binary for only requiring glibc 2.12'
         if: ${{ env.OS == 'linux' }}
         shell: bash
@@ -122,6 +134,7 @@ jobs:
           path: |
             dist/target/maven-mvnd-*.zip
             dist/target/maven-mvnd-*.tar.gz
+            dist/target/maven-mvnd-*.sha256
 
   source:
     name: 'Build source distributions'
@@ -162,6 +175,18 @@ jobs:
       - name: 'Build source distribution'
         run: ./mvnw clean verify -Psource-distribution -N -B -ntp -e -s .mvn/release-settings.xml
 
+      - name: 'Generate SHA-256 checksums'
+        shell: bash
+        run: |
+          cd target
+          for f in maven-mvnd-*.zip maven-mvnd-*.tar.gz; do
+            if command -v sha256sum >/dev/null 2>&1; then
+              sha256sum "$f" > "$f.sha256"
+            elif command -v shasum >/dev/null 2>&1; then
+              shasum -a 256 "$f" > "$f.sha256"
+            fi
+          done
+
       - name: 'Upload artifact'
         uses: actions/upload-artifact@v7
         with:
@@ -169,6 +194,7 @@ jobs:
           path: |
             target/maven-mvnd-*.zip
             target/maven-mvnd-*.tar.gz
+            target/maven-mvnd-*.sha256
 
   release:
     runs-on: ubuntu-latest
@@ -224,6 +250,16 @@ jobs:
           asset_name: maven-mvnd-${{ env.VERSION }}-src.zip
           asset_content_type: application/zip
 
+      - name: Deploy maven-mvnd-src.zip.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-sources/maven-mvnd-${{ env.VERSION }}-src.zip.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-src.zip.sha256
+          asset_content_type: text/plain
+
       - name: Deploy maven-mvnd-src.tar.gz
         uses: actions/upload-release-asset@v1
         env:
@@ -233,6 +269,16 @@ jobs:
           asset_path: mvnd-sources/maven-mvnd-${{ env.VERSION }}-src.tar.gz
           asset_name: maven-mvnd-${{ env.VERSION }}-src.tar.gz
           asset_content_type: application/tar.gz
+
+      - name: Deploy maven-mvnd-src.tar.gz.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-sources/maven-mvnd-${{ env.VERSION }}-src.tar.gz.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-src.tar.gz.sha256
+          asset_content_type: text/plain
 
       - name: Deploy maven-mvnd-linux-amd64.zip
         uses: actions/upload-release-asset@v1
@@ -244,6 +290,16 @@ jobs:
           asset_name: maven-mvnd-${{ env.VERSION }}-linux-amd64.zip
           asset_content_type: application/zip
 
+      - name: Deploy maven-mvnd-linux-amd64.zip.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-linux-amd64/maven-mvnd-${{ env.VERSION }}-linux-amd64.zip.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-linux-amd64.zip.sha256
+          asset_content_type: text/plain
+
       - name: Deploy maven-mvnd-linux-amd64.tar.gz
         uses: actions/upload-release-asset@v1
         env:
@@ -253,6 +309,16 @@ jobs:
           asset_path: mvnd-linux-amd64/maven-mvnd-${{ env.VERSION }}-linux-amd64.tar.gz
           asset_name: maven-mvnd-${{ env.VERSION }}-linux-amd64.tar.gz
           asset_content_type: application/x-gzip
+
+      - name: Deploy maven-mvnd-linux-amd64.tar.gz.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-linux-amd64/maven-mvnd-${{ env.VERSION }}-linux-amd64.tar.gz.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-linux-amd64.tar.gz.sha256
+          asset_content_type: text/plain
 
       - name: Deploy maven-mvnd-darwin-amd64.zip
         uses: actions/upload-release-asset@v1
@@ -264,6 +330,16 @@ jobs:
           asset_name: maven-mvnd-${{ env.VERSION }}-darwin-amd64.zip
           asset_content_type: application/zip
 
+      - name: Deploy maven-mvnd-darwin-amd64.zip.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-darwin-amd64/maven-mvnd-${{ env.VERSION }}-darwin-amd64.zip.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-darwin-amd64.zip.sha256
+          asset_content_type: text/plain
+
       - name: Deploy maven-mvnd-darwin-amd64.tar.gz
         uses: actions/upload-release-asset@v1
         env:
@@ -273,6 +349,16 @@ jobs:
           asset_path: mvnd-darwin-amd64/maven-mvnd-${{ env.VERSION }}-darwin-amd64.tar.gz
           asset_name: maven-mvnd-${{ env.VERSION }}-darwin-amd64.tar.gz
           asset_content_type: application/x-gzip
+
+      - name: Deploy maven-mvnd-darwin-amd64.tar.gz.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-darwin-amd64/maven-mvnd-${{ env.VERSION }}-darwin-amd64.tar.gz.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-darwin-amd64.tar.gz.sha256
+          asset_content_type: text/plain
 
       - name: Deploy maven-mvnd-darwin-aarch64.zip
         uses: actions/upload-release-asset@v1
@@ -284,6 +370,16 @@ jobs:
           asset_name: maven-mvnd-${{ env.VERSION }}-darwin-aarch64.zip
           asset_content_type: application/zip
 
+      - name: Deploy maven-mvnd-darwin-aarch64.zip.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-darwin-aarch64/maven-mvnd-${{ env.VERSION }}-darwin-aarch64.zip.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-darwin-aarch64.zip.sha256
+          asset_content_type: text/plain
+
       - name: Deploy maven-mvnd-darwin-aarch64.tar.gz
         uses: actions/upload-release-asset@v1
         env:
@@ -293,6 +389,16 @@ jobs:
           asset_path: mvnd-darwin-aarch64/maven-mvnd-${{ env.VERSION }}-darwin-aarch64.tar.gz
           asset_name: maven-mvnd-${{ env.VERSION }}-darwin-aarch64.tar.gz
           asset_content_type: application/x-gzip
+
+      - name: Deploy maven-mvnd-darwin-aarch64.tar.gz.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-darwin-aarch64/maven-mvnd-${{ env.VERSION }}-darwin-aarch64.tar.gz.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-darwin-aarch64.tar.gz.sha256
+          asset_content_type: text/plain
 
       - name: Deploy maven-mvnd-windows-amd64.zip
         uses: actions/upload-release-asset@v1
@@ -304,6 +410,16 @@ jobs:
           asset_name: maven-mvnd-${{ env.VERSION }}-windows-amd64.zip
           asset_content_type: application/zip
 
+      - name: Deploy maven-mvnd-windows-amd64.zip.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-windows-amd64/maven-mvnd-${{ env.VERSION }}-windows-amd64.zip.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-windows-amd64.zip.sha256
+          asset_content_type: text/plain
+
       - name: Deploy maven-mvnd-windows-amd64.tar.gz
         uses: actions/upload-release-asset@v1
         env:
@@ -313,4 +429,14 @@ jobs:
           asset_path: mvnd-windows-amd64/maven-mvnd-${{ env.VERSION }}-windows-amd64.tar.gz
           asset_name: maven-mvnd-${{ env.VERSION }}-windows-amd64.tar.gz
           asset_content_type: application/x-gzip
+
+      - name: Deploy maven-mvnd-windows-amd64.tar.gz.sha256
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: mvnd-windows-amd64/maven-mvnd-${{ env.VERSION }}-windows-amd64.tar.gz.sha256
+          asset_name: maven-mvnd-${{ env.VERSION }}-windows-amd64.tar.gz.sha256
+          asset_content_type: text/plain
 
