@@ -22,6 +22,8 @@ on:
   workflow_dispatch:
   # build on new tags
   push:
+    branches:
+      - xuxiaowei/*
     tags:
       - '*'
 
