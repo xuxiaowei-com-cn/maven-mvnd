@@ -103,6 +103,14 @@ jobs:
       - name: 'Build native distribution'
         run: ./mvnw verify -Pnative -Dmrm=false -B -ntp -e -DskipTests -s .mvn/release-settings.xml
 
+      - name: 'Generate SHA-256 checksums'
+        shell: bash
+        run: |
+          cd dist/target
+          for f in maven-mvnd-*.zip maven-mvnd-*.tar.gz; do
+            sha256sum "$f" > "$f.sha256"
+          done
+
       - name: 'Verify native binary for only requiring glibc 2.12'
         if: ${{ env.OS == 'linux' }}
         shell: bash
